@@ -7,7 +7,6 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=pp
 
 // PropagationPolicy represents the policy that propagates a group of resources to one or more clusters.
@@ -16,14 +15,15 @@ type PropagationPolicy struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents the desired behavior of PropagationPolicy.
+	// +required
 	Spec PropagationSpec `json:"spec"`
 }
 
 // PropagationSpec represents the desired behavior of PropagationPolicy.
 type PropagationSpec struct {
 	// ResourceSelectors used to select resources.
-	// nil represents all resources.
-	ResourceSelectors []ResourceSelector `json:"resourceSelectors,omitempty"`
+	// +required
+	ResourceSelectors []ResourceSelector `json:"resourceSelectors"`
 
 	// Association tells if relevant resources should be selected automatically.
 	// e.g. a ConfigMap referred by a Deployment.
@@ -32,6 +32,7 @@ type PropagationSpec struct {
 	Association bool `json:"association,omitempty"`
 
 	// Placement represents the rule for select clusters to propagate resources.
+	// +optional
 	Placement Placement `json:"placement,omitempty"`
 
 	// DependentOverrides represents the list of overrides(OverridePolicy)
@@ -49,15 +50,18 @@ type PropagationSpec struct {
 	// SchedulerName represents which scheduler to proceed the scheduling.
 	// If specified, the policy will be dispatched by specified scheduler.
 	// If not specified, the policy will be dispatched by default scheduler.
+	// +optional
 	SchedulerName string `json:"schedulerName,omitempty"`
 }
 
 // ResourceSelector the resources will be selected.
 type ResourceSelector struct {
 	// APIVersion represents the API version of the target resources.
+	// +required
 	APIVersion string `json:"apiVersion"`
 
 	// Kind represents the Kind of the target resources.
+	// +required
 	Kind string `json:"kind"`
 
 	// Namespace of the target resource.
@@ -90,10 +94,17 @@ type Placement struct {
 	ClusterAffinity *ClusterAffinity `json:"clusterAffinity,omitempty"`
 
 	// ClusterTolerations represents the tolerations.
+	// +optional
 	ClusterTolerations []corev1.Toleration `json:"clusterTolerations,omitempty"`
 
 	// SpreadConstraints represents a list of the scheduling constraints.
+	// +optional
 	SpreadConstraints []SpreadConstraint `json:"spreadConstraints,omitempty"`
+
+	// ReplicaScheduling represents the scheduling policy on dealing with the number of replicas
+	// when propagating resources that have replicas in spec (e.g. deployments, statefulsets) to member clusters.
+	// +optional
+	ReplicaScheduling *ReplicaSchedulingStrategy `json:"replicaScheduling,omitempty"`
 }
 
 // SpreadFieldValue is the type to define valid values for SpreadConstraint.SpreadByField
@@ -140,17 +151,68 @@ type SpreadConstraint struct {
 type ClusterAffinity struct {
 	// LabelSelector is a filter to select member clusters by labels.
 	// If non-nil and non-empty, only the clusters match this filter will be selected.
+	// +optional
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty"`
 
 	// FieldSelector is a filter to select member clusters by fields.
 	// If non-nil and non-empty, only the clusters match this filter will be selected.
+	// +optional
 	FieldSelector *FieldSelector `json:"fieldSelector,omitempty"`
 
 	// ClusterNames is the list of clusters to be selected.
+	// +optional
 	ClusterNames []string `json:"clusterNames,omitempty"`
 
 	// ExcludedClusters is the list of clusters to be ignored.
+	// +optional
 	ExcludeClusters []string `json:"exclude,omitempty"`
+}
+
+// ReplicaSchedulingType describes scheduling methods for the "replicas" in a resouce.
+type ReplicaSchedulingType string
+
+const (
+	// ReplicaSchedulingTypeDuplicated means when propagating a resource,
+	// each candidate member cluster will directly apply the original replicas.
+	ReplicaSchedulingTypeDuplicated ReplicaSchedulingType = "Duplicated"
+	// ReplicaSchedulingTypeDivided means when propagating a resource,
+	// each candidate member cluster will get only a part of original replicas.
+	ReplicaSchedulingTypeDivided ReplicaSchedulingType = "Divided"
+)
+
+// ReplicaDivisionPreference describes options of how replicas can be scheduled.
+type ReplicaDivisionPreference string
+
+const (
+	// ReplicaDivisionPreferenceAggregated divides replicas into clusters as few as possible,
+	// while respecting clusters' resource availabilities during the division.
+	ReplicaDivisionPreferenceAggregated ReplicaDivisionPreference = "Aggregated"
+	// ReplicaDivisionPreferenceWeighted divides replicas by weight according to WeightPreference.
+	ReplicaDivisionPreferenceWeighted ReplicaDivisionPreference = "Weighted"
+)
+
+// ReplicaSchedulingStrategy represents the assignment strategy of replicas.
+type ReplicaSchedulingStrategy struct {
+	// ReplicaSchedulingType determines how the replicas is scheduled when karmada propagating
+	// a resource. Valid options are Duplicated and Divided.
+	// "Duplicated" duplicates the same replicas to each candidate member cluster from resource.
+	// "Divided" divides replicas into parts according to number of valid candidate member
+	// clusters, and exact replicas for each cluster are determined by ReplicaDivisionPreference.
+	// +optional
+	ReplicaSchedulingType ReplicaSchedulingType `json:"replicaSchedulingType,omitempty"`
+
+	// ReplicaDivisionPreference determines how the replicas is divided
+	// when ReplicaSchedulingType is "Divided". Valid options are Aggregated and Weighted.
+	// "Aggregated" divides replicas into clusters as few as possible,
+	// while respecting clusters' resource availabilities during the division.
+	// "Weighted" divides replicas by weight according to WeightPreference.
+	// +optional
+	ReplicaDivisionPreference ReplicaDivisionPreference `json:"replicaDivisionPreference,omitempty"`
+
+	// WeightPreference describes weight for each cluster or for each group of cluster
+	// If ReplicaDivisionPreference is set to "Weighted", and WeightPreference is not set, scheduler will weight all clusters the same.
+	// +optional
+	WeightPreference *ClusterPreferences `json:"weightPreference,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -176,6 +238,7 @@ type ClusterPropagationPolicy struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents the desired behavior of ClusterPropagationPolicy.
+	// +required
 	Spec PropagationSpec `json:"spec"`
 }
 
