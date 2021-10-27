@@ -1,6 +1,6 @@
 module github.com/karmada-io/api
 
-go 1.14
+go 1.16
 
 require (
 	k8s.io/api v0.21.3
