@@ -5,6 +5,7 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:resource:shortName=rsp
+// +kubebuilder:deprecatedversion
 
 // ReplicaSchedulingPolicy represents the policy that propagates total number of replicas for deployment.
 type ReplicaSchedulingPolicy struct {
@@ -45,6 +46,7 @@ type StaticClusterWeight struct {
 	TargetCluster ClusterAffinity `json:"targetCluster"`
 
 	// Weight expressing the preference to the cluster(s) specified by 'TargetCluster'.
+	// +kubebuilder:validation:Minimum=1
 	// +required
 	Weight int64 `json:"weight"`
 }
