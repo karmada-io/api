@@ -64,7 +64,7 @@ type ResourceInterpreterRequest struct {
 
 	// AggregatedStatus represents status list of the resource running in each member cluster.
 	// +optional
-	AggregatedStatus []workv1alpha1.AggregatedStatusItem `json:"aggregatedStatus,omitempty"`
+	AggregatedStatus []workv1alpha2.AggregatedStatusItem `json:"aggregatedStatus,omitempty"`
 }
 
 // ResourceInterpreterResponse describes an interpreter response.
