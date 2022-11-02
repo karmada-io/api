@@ -78,6 +78,12 @@ type ClusterSpec struct {
 	// any resource that does not tolerate the Taint.
 	// +optional
 	Taints []corev1.Taint
+
+	// WithClusterAutoScaler indicates that the cluster has cluster-autoscaler component.
+	// it means the cluster always has enough resources.
+	// Defaults to false.
+	// +optional
+	WithClusterAutoScaler bool
 }
 
 const (
