@@ -27,7 +27,7 @@ const (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:resource:shortName=op
+// +kubebuilder:resource:shortName=op,categories={karmada-io}
 
 // OverridePolicy represents the policy that overrides a group of resources to one or more clusters.
 type OverridePolicy struct {
@@ -79,8 +79,10 @@ type RuleWithCluster struct {
 
 // Overriders offers various alternatives to represent the override rules.
 //
-// If more than one alternatives exist, they will be applied with following order:
+// If more than one alternative exists, they will be applied with following order:
 // - ImageOverrider
+// - CommandOverrider
+// - ArgsOverrider
 // - Plaintext
 type Overriders struct {
 	// Plaintext represents override rules defined with plaintext overriders.
@@ -223,7 +225,7 @@ type OverridePolicyList struct {
 
 // +genclient
 // +genclient:nonNamespaced
-// +kubebuilder:resource:scope="Cluster",shortName=cop
+// +kubebuilder:resource:scope="Cluster",shortName=cop,categories={karmada-io}
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ClusterOverridePolicy represents the cluster-wide policy that overrides a group of resources to one or more clusters.
