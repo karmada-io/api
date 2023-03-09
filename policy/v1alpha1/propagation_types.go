@@ -106,6 +106,7 @@ type PropagationSpec struct {
 	// SchedulerName represents which scheduler to proceed the scheduling.
 	// If specified, the policy will be dispatched by specified scheduler.
 	// If not specified, the policy will be dispatched by default scheduler.
+	// +kubebuilder:default="default-scheduler"
 	// +optional
 	SchedulerName string `json:"schedulerName,omitempty"`
 }
@@ -145,9 +146,45 @@ type FieldSelector struct {
 // Placement represents the rule for select clusters.
 type Placement struct {
 	// ClusterAffinity represents scheduling restrictions to a certain set of clusters.
-	// If not set, any cluster can be scheduling candidate.
+	// Note:
+	//   1. ClusterAffinity can not co-exist with ClusterAffinities.
+	//   2. If both ClusterAffinity and ClusterAffinities are not set, any cluster
+	//      can be scheduling candidates.
 	// +optional
 	ClusterAffinity *ClusterAffinity `json:"clusterAffinity,omitempty"`
+
+	// ClusterAffinities represents scheduling restrictions to multiple cluster
+	// groups that indicated by ClusterAffinityTerm.
+	//
+	// The scheduler will evaluate these groups one by one in the order they
+	// appear in the spec, the group that does not satisfy scheduling restrictions
+	// will be ignored which means all clusters in this group will not be selected
+	// unless it also belongs to the next group(a cluster could belong to multiple
+	// groups).
+	//
+	// If none of the groups satisfy the scheduling restrictions, then scheduling
+	// fails, which means no cluster will be selected.
+	//
+	// Note:
+	//   1. ClusterAffinities can not co-exist with ClusterAffinity.
+	//   2. If both ClusterAffinity and ClusterAffinities are not set, any cluster
+	//      can be scheduling candidates.
+	//
+	// Potential use case 1:
+	// The private clusters in the local data center could be the main group, and
+	// the managed clusters provided by cluster providers could be the secondary
+	// group. So that the Karmada scheduler would prefer to schedule workloads
+	// to the main group and the second group will only be considered in case of
+	// the main group does not satisfy restrictions(like, lack of resources).
+	//
+	// Potential use case 2:
+	// For the disaster recovery scenario, the clusters could be organized to
+	// primary and backup groups, the workloads would be scheduled to primary
+	// clusters firstly, and when primary cluster fails(like data center power off),
+	// Karmada scheduler could migrate workloads to the backup clusters.
+	//
+	// +optional
+	ClusterAffinities []ClusterAffinityTerm `json:"clusterAffinities,omitempty"`
 
 	// ClusterTolerations represents the tolerations.
 	// +optional
@@ -224,6 +261,15 @@ type ClusterAffinity struct {
 	ExcludeClusters []string `json:"exclude,omitempty"`
 }
 
+// ClusterAffinityTerm selects a set of cluster.
+type ClusterAffinityTerm struct {
+	// AffinityName is the name of the cluster group.
+	// +required
+	AffinityName string `json:"affinityName"`
+
+	ClusterAffinity `json:",inline"`
+}
+
 // ReplicaSchedulingType describes scheduling methods for the "replicas" in a resource.
 type ReplicaSchedulingType string
 
@@ -255,6 +301,7 @@ type ReplicaSchedulingStrategy struct {
 	// "Divided" divides replicas into parts according to number of valid candidate member
 	// clusters, and exact replicas for each cluster are determined by ReplicaDivisionPreference.
 	// +kubebuilder:validation:Enum=Duplicated;Divided
+	// +kubebuilder:default=Divided
 	// +optional
 	ReplicaSchedulingType ReplicaSchedulingType `json:"replicaSchedulingType,omitempty"`
 

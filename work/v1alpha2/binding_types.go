@@ -5,6 +5,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+
+	policyv1alpha1 "github.com/karmada-io/api/policy/v1alpha1"
 )
 
 const (
@@ -72,6 +74,10 @@ type ResourceBindingSpec struct {
 	// +optional
 	Clusters []TargetCluster `json:"clusters,omitempty"`
 
+	// Placement represents the rule for select clusters to propagate resources.
+	// +optional
+	Placement *policyv1alpha1.Placement `json:"placement,omitempty"`
+
 	// GracefulEvictionTasks holds the eviction tasks that are expected to perform
 	// the eviction in a graceful way.
 	// The intended workflow is:
@@ -91,6 +97,11 @@ type ResourceBindingSpec struct {
 	// RequiredBy represents the list of Bindings that depend on the referencing resource.
 	// +optional
 	RequiredBy []BindingSnapshot `json:"requiredBy,omitempty"`
+
+	// SchedulerName represents which scheduler to proceed the scheduling.
+	// It inherits directly from the associated PropagationPolicy(or ClusterPropagationPolicy).
+	// +optional
+	SchedulerName string `json:"schedulerName,omitempty"`
 }
 
 // ObjectReference contains enough information to locate the referenced object inside current cluster.
@@ -224,9 +235,16 @@ type ResourceBindingStatus struct {
 	// the scheduling result or hasn't done the schedule yet.
 	// +optional
 	SchedulerObservedGeneration int64 `json:"schedulerObservedGeneration,omitempty"`
+
+	// SchedulerObservedAffinityName is the name of affinity term that is
+	// the basis of current scheduling.
+	// +optional
+	SchedulerObservedAffinityName string `json:"schedulerObservingAffinityName,omitempty"`
+
 	// Conditions contain the different condition statuses.
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
 	// AggregatedStatus represents status list of the resource running in each member cluster.
 	// +optional
 	AggregatedStatus []AggregatedStatusItem `json:"aggregatedStatus,omitempty"`
