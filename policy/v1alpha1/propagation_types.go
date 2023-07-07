@@ -109,6 +109,11 @@ type PropagationSpec struct {
 	// +kubebuilder:default="default-scheduler"
 	// +optional
 	SchedulerName string `json:"schedulerName,omitempty"`
+
+	// Failover indicates how Karmada migrates applications in case of failures.
+	// If this value is nil, failover is disabled.
+	// +optional
+	Failover *FailoverBehavior `json:"failover,omitempty"`
 }
 
 // ResourceSelector the resources will be selected.
@@ -141,6 +146,77 @@ type ResourceSelector struct {
 type FieldSelector struct {
 	// A list of field selector requirements.
 	MatchExpressions []corev1.NodeSelectorRequirement `json:"matchExpressions,omitempty"`
+}
+
+// PurgeMode represents that how to deal with the legacy applications on the
+// cluster from which the application is migrated.
+type PurgeMode string
+
+const (
+	// Immediately represents that Karmada will immediately evict the legacy
+	// application.
+	Immediately PurgeMode = "Immediately"
+	// Graciously represents that Karmada will wait for the application to
+	// come back to healthy on the new cluster or after a timeout is reached
+	// before evicting the application.
+	Graciously PurgeMode = "Graciously"
+	// Never represents that Karmada will not evict the application and
+	// users manually confirms how to clean up redundant copies.
+	Never PurgeMode = "Never"
+)
+
+// FailoverBehavior indicates failover behaviors in case of an application or
+// cluster failure.
+type FailoverBehavior struct {
+	// Application indicates failover behaviors in case of application failure.
+	// If this value is nil, failover is disabled.
+	// If set, the PropagateDeps should be true so that the dependencies could
+	// be migrated along with the application.
+	// +optional
+	Application *ApplicationFailoverBehavior `json:"application,omitempty"`
+
+	// Cluster indicates failover behaviors in case of cluster failure.
+	// If this value is nil, failover is disabled.
+	// +optional
+	// Cluster *ClusterFailoverBehavior `json:"cluster,omitempty"`
+}
+
+// ApplicationFailoverBehavior indicates application failover behaviors.
+type ApplicationFailoverBehavior struct {
+	// DecisionConditions indicates the decision conditions of performing the failover process.
+	// Only when all conditions are met can the failover process be performed.
+	// Currently, DecisionConditions includes several conditions:
+	// - TolerationSeconds (optional)
+	// +required
+	DecisionConditions DecisionConditions `json:"decisionConditions"`
+
+	// PurgeMode represents how to deal with the legacy applications on the
+	// cluster from which the application is migrated.
+	// Valid options are "Immediately", "Graciously" and "Never".
+	// Defaults to "Graciously".
+	// +kubebuilder:default=Graciously
+	// +optional
+	PurgeMode PurgeMode `json:"purgeMode,omitempty"`
+
+	// GracePeriodSeconds is the maximum waiting duration in seconds before
+	// application on the migrated cluster should be deleted.
+	// Required only when PurgeMode is "Graciously" and defaults to 600s.
+	// If the application on the new cluster cannot reach a Healthy state,
+	// Karmada will delete the application after GracePeriodSeconds is reached.
+	// Value must be positive integer.
+	// +optional
+	GracePeriodSeconds *int32 `json:"gracePeriodSeconds,omitempty"`
+}
+
+// DecisionConditions represents the decision conditions of performing the failover process.
+type DecisionConditions struct {
+	// TolerationSeconds represents the period of time Karmada should wait
+	// after reaching the desired state before performing failover process.
+	// If not specified, Karmada will immediately perform failover process.
+	// Defaults to 300s.
+	// +kubebuilder:default=300
+	// +optional
+	TolerationSeconds *int32 `json:"tolerationSeconds,omitempty"`
 }
 
 // Placement represents the rule for select clusters.
@@ -248,6 +324,8 @@ type ClusterAffinity struct {
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty"`
 
 	// FieldSelector is a filter to select member clusters by fields.
+	// The key(field) of the match expression should be 'provider', 'region', or 'zone',
+	// and the operator of the match expression should be 'In' or 'NotIn'.
 	// If non-nil and non-empty, only the clusters match this filter will be selected.
 	// +optional
 	FieldSelector *FieldSelector `json:"fieldSelector,omitempty"`
@@ -264,6 +342,8 @@ type ClusterAffinity struct {
 // ClusterAffinityTerm selects a set of cluster.
 type ClusterAffinityTerm struct {
 	// AffinityName is the name of the cluster group.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=32
 	// +required
 	AffinityName string `json:"affinityName"`
 
