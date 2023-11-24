@@ -9,6 +9,12 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=fhpa,categories={karmada-io}
+// +kubebuilder:printcolumn:JSONPath=`.spec.scaleTargetRef.kind`,name=`REFERENCE-KIND`,type=string
+// +kubebuilder:printcolumn:JSONPath=`.spec.scaleTargetRef.name`,name=`REFERENCE-NAME`,type=string
+// +kubebuilder:printcolumn:JSONPath=`.spec.minReplicas`,name=`MINPODS`,type=integer
+// +kubebuilder:printcolumn:JSONPath=`.spec.maxReplicas`,name=`MAXPODS`,type=integer
+// +kubebuilder:printcolumn:JSONPath=`.status.currentReplicas`,name=`REPLICAS`,type=integer
+// +kubebuilder:printcolumn:JSONPath=`.metadata.creationTimestamp`,name=`AGE`,type=date
 
 // FederatedHPA is centralized HPA that can aggregate the metrics in multiple clusters.
 // When the system load increases, it will query the metrics from multiple clusters and scales up the replicas.
@@ -18,7 +24,7 @@ type FederatedHPA struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// Spec is the specification of the FederatedHPASpec.
+	// Spec is the specification of the FederatedHPA.
 	// +required
 	Spec FederatedHPASpec `json:"spec"`
 
@@ -35,17 +41,16 @@ type FederatedHPASpec struct {
 	// +required
 	ScaleTargetRef autoscalingv2.CrossVersionObjectReference `json:"scaleTargetRef"`
 
-	// minReplicas is the lower limit for the number of replicas to which the autoscaler
-	// can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the
-	// alpha feature gate HPAScaleToZero is enabled and at least one Object or External
-	// metric is configured.  Scaling is active as long as at least one metric value is
-	// available.
+	// MinReplicas is the lower limit for the number of replicas to which the
+	// autoscaler can scale down.
+	// It defaults to 1 pod.
 	// +optional
-	MinReplicas *int32 `json:"minReplicas,omitempty" protobuf:"varint,2,opt,name=minReplicas"`
+	MinReplicas *int32 `json:"minReplicas,omitempty"`
 
-	// maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
+	// MaxReplicas is the upper limit for the number of replicas to which the
+	// autoscaler can scale up.
 	// It cannot be less that minReplicas.
-	MaxReplicas int32 `json:"maxReplicas" protobuf:"varint,3,opt,name=maxReplicas"`
+	MaxReplicas int32 `json:"maxReplicas"`
 
 	// Metrics contains the specifications for which to use to calculate the
 	// desired replica count (the maximum replica count across all metrics will
