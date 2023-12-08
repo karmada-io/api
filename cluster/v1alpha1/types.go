@@ -1,3 +1,19 @@
+/*
+Copyright 2020 The Karmada Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package v1alpha1
 
 import (
@@ -15,26 +31,6 @@ const (
 	ResourcePluralCluster = "clusters"
 	// ResourceNamespaceScopedCluster indicates if Cluster is NamespaceScoped.
 	ResourceNamespaceScopedCluster = false
-)
-
-// ResourceName is the name identifying various resources in a ResourceList.
-type ResourceName string
-
-// Resource names must be not more than 63 characters, consisting of upper- or lower-case alphanumeric characters,
-// with the -, _, and . characters allowed anywhere, except the first or last character.
-// The default convention, matching that for annotations, is to use lower-case names, with dashes, rather than
-// camel case, separating compound words.
-// Fully-qualified resource typenames are constructed from a DNS-style subdomain, followed by a slash `/` and a name.
-const (
-	// ResourceCPU in cores. (e,g. 500m = .5 cores)
-	ResourceCPU ResourceName = "cpu"
-	// ResourceMemory in bytes. (e,g. 500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
-	ResourceMemory ResourceName = "memory"
-	// ResourceStorage is volume size, in bytes (e,g. 5Gi = 5GiB = 5 * 1024 * 1024 * 1024)
-	ResourceStorage ResourceName = "storage"
-	// ResourceEphemeralStorage is local ephemeral storage, in bytes. (e,g. 500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
-	// The resource name for ResourceEphemeralStorage is alpha and it can change across releases.
-	ResourceEphemeralStorage ResourceName = "ephemeral-storage"
 )
 
 // +genclient
@@ -229,7 +225,7 @@ type ResourceModel struct {
 type ResourceModelRange struct {
 	// Name is the name for the resource that you want to categorize.
 	// +required
-	Name ResourceName `json:"name"`
+	Name corev1.ResourceName `json:"name"`
 
 	// Min is the minimum amount of this resource represented by resource name.
 	// Note: The Min value of first grade(usually 0) always acts as zero.

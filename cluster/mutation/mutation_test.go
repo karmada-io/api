@@ -1,3 +1,19 @@
+/*
+Copyright 2022 The Karmada Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package mutation
 
 import (
@@ -84,7 +100,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 2,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(2, resource.DecimalSI),
 							Max:  *resource.NewQuantity(math.MaxInt64, resource.DecimalSI),
 						},
@@ -94,7 +110,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 1,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(0, resource.DecimalSI),
 							Max:  *resource.NewQuantity(2, resource.DecimalSI),
 						},
@@ -106,7 +122,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 1,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(0, resource.DecimalSI),
 							Max:  *resource.NewQuantity(2, resource.DecimalSI),
 						},
@@ -116,7 +132,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 2,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(2, resource.DecimalSI),
 							Max:  *resource.NewQuantity(math.MaxInt64, resource.DecimalSI),
 						},
@@ -130,7 +146,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 1,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(1, resource.DecimalSI),
 							Max:  *resource.NewQuantity(math.MaxInt64, resource.DecimalSI),
 						},
@@ -142,7 +158,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 1,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(0, resource.DecimalSI),
 							Max:  *resource.NewQuantity(math.MaxInt64, resource.DecimalSI),
 						},
@@ -156,7 +172,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 1,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(0, resource.DecimalSI),
 							Max:  *resource.NewQuantity(2, resource.DecimalSI),
 						},
@@ -168,7 +184,7 @@ func TestStandardizeClusterResourceModels(t *testing.T) {
 					Grade: 1,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(0, resource.DecimalSI),
 							Max:  *resource.NewQuantity(math.MaxInt64, resource.DecimalSI),
 						},
@@ -206,12 +222,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 0,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(0, resource.DecimalSI),
 							Max:  *resource.NewQuantity(1, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(0, resource.BinarySI),
 							Max:  *resource.NewQuantity(4*GB, resource.BinarySI),
 						},
@@ -221,12 +237,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 1,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(1, resource.DecimalSI),
 							Max:  *resource.NewQuantity(2, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(4*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(16*GB, resource.BinarySI),
 						},
@@ -236,12 +252,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 2,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(2, resource.DecimalSI),
 							Max:  *resource.NewQuantity(4, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(16*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(32*GB, resource.BinarySI),
 						},
@@ -251,12 +267,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 3,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(4, resource.DecimalSI),
 							Max:  *resource.NewQuantity(8, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(32*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(64*GB, resource.BinarySI),
 						},
@@ -266,12 +282,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 4,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(8, resource.DecimalSI),
 							Max:  *resource.NewQuantity(16, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(64*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(128*GB, resource.BinarySI),
 						},
@@ -281,12 +297,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 5,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(16, resource.DecimalSI),
 							Max:  *resource.NewQuantity(32, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(128*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(256*GB, resource.BinarySI),
 						},
@@ -296,12 +312,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 6,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(32, resource.DecimalSI),
 							Max:  *resource.NewQuantity(64, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(256*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(512*GB, resource.BinarySI),
 						},
@@ -311,12 +327,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 7,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(64, resource.DecimalSI),
 							Max:  *resource.NewQuantity(128, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(512*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(1024*GB, resource.BinarySI),
 						},
@@ -326,12 +342,12 @@ func TestSetDefaultClusterResourceModels(t *testing.T) {
 					Grade: 8,
 					Ranges: []clusterapis.ResourceModelRange{
 						{
-							Name: clusterapis.ResourceCPU,
+							Name: corev1.ResourceCPU,
 							Min:  *resource.NewQuantity(128, resource.DecimalSI),
 							Max:  *resource.NewQuantity(math.MaxInt64, resource.DecimalSI),
 						},
 						{
-							Name: clusterapis.ResourceMemory,
+							Name: corev1.ResourceMemory,
 							Min:  *resource.NewQuantity(1024*GB, resource.BinarySI),
 							Max:  *resource.NewQuantity(math.MaxInt64, resource.BinarySI),
 						},
