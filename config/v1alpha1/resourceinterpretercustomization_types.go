@@ -1,7 +1,34 @@
+/*
+Copyright 2022 The Karmada Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	// ResourceKindResourceInterpreterCustomization is kind name of ResourceInterpreterCustomization.
+	ResourceKindResourceInterpreterCustomization = "ResourceInterpreterCustomization"
+	// ResourceSingularResourceInterpreterCustomization is singular name of ResourceInterpreterCustomization.
+	ResourceSingularResourceInterpreterCustomization = "resourceinterpretercustomization"
+	// ResourcePluralResourceInterpreterCustomization is plural name of ResourceInterpreterCustomization.
+	ResourcePluralResourceInterpreterCustomization = "resourceinterpretercustomizations"
+	// ResourceNamespaceScopedResourceInterpreterCustomization indicates if ResourceInterpreterCustomization is NamespaceScoped.
+	ResourceNamespaceScopedResourceInterpreterCustomization = false
 )
 
 // +genclient
@@ -275,7 +302,7 @@ type DependencyInterpretation struct {
 	//     luaScript: >
 	//         function GetDependencies(desiredObj)
 	//             dependencies = {}
-	//             if desiredObj.spec.serviceAccountName ~= "" and desiredObj.spec.serviceAccountName ~= "default" then
+	//             if desiredObj.spec.serviceAccountName ~= nil and desiredObj.spec.serviceAccountName ~= "default" then
 	//                 dependency = {}
 	//                 dependency.apiVersion = "v1"
 	//                 dependency.kind = "ServiceAccount"
