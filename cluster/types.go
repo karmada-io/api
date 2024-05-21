@@ -213,7 +213,7 @@ type ResourceModel struct {
 type ResourceModelRange struct {
 	// Name is the name for the resource that you want to categorize.
 	// +required
-	Name ResourceName
+	Name corev1.ResourceName
 
 	// Min is the minimum amount of this resource represented by resource name.
 	// Note: The Min value of first grade(usually 0) always acts as zero.
@@ -290,6 +290,11 @@ type ClusterStatus struct {
 	// ResourceSummary represents the summary of resources in the member cluster.
 	// +optional
 	ResourceSummary *ResourceSummary
+
+	// RemedyActions represents the remedy actions that needs to be performed
+	// on the cluster.
+	// +optional
+	RemedyActions []string
 }
 
 // APIEnablement is a list of API resource, it is used to expose the name of the

@@ -175,6 +175,14 @@ type ReplicaRequirements struct {
 	// ResourceRequest represents the resources required by each replica.
 	// +optional
 	ResourceRequest corev1.ResourceList `json:"resourceRequest,omitempty"`
+
+	// Namespace represents the resources namespaces
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+
+	// PriorityClassName represents the resources priorityClassName
+	// +optional
+	PriorityClassName string `json:"priorityClassName,omitempty"`
 }
 
 // NodeClaim represents the node claim HardNodeAffinity, NodeSelector and Tolerations required by each replica.
@@ -256,7 +264,7 @@ type GracefulEvictionTask struct {
 	//
 	// Populated by the system. Read-only.
 	// +optional
-	CreationTimestamp metav1.Time `json:"creationTimestamp,omitempty"`
+	CreationTimestamp *metav1.Time `json:"creationTimestamp,omitempty"`
 }
 
 // BindingSnapshot is a snapshot of a ResourceBinding or ClusterResourceBinding.
