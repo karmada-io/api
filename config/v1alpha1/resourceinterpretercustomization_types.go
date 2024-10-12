@@ -36,6 +36,9 @@ const (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:resource:path=resourceinterpretercustomizations,scope="Cluster",shortName=ric,categories={karmada-io}
 // +kubebuilder:storageversion
+// +kubebuilder:printcolumn:JSONPath=`.spec.target.apiVersion`,name="TARGET-API-VERSION",type=string
+// +kubebuilder:printcolumn:JSONPath=`.spec.target.kind`,name="TARGET-KIND",type=string
+// +kubebuilder:printcolumn:JSONPath=`.metadata.creationTimestamp`,name="AGE",type=date
 
 // ResourceInterpreterCustomization describes the configuration of a specific
 // resource for Karmada to get the structure.
@@ -322,13 +325,13 @@ type DependencyInterpretation struct {
 	//   luaScript: >
 	//       function GetDependencies(desiredObj)
 	//           dependencies = {}
-	//           if desiredObj.spec.serviceAccountName ~= nil and desiredObj.spec.serviceAccountName ~= "default" then
+	//           serviceAccountName = desiredObj.spec.template.spec.serviceAccountName
+	//           if serviceAccountName ~= nil and serviceAccountName ~= "default" then
 	//               dependency = {}
 	//               dependency.apiVersion = "v1"
 	//               dependency.kind = "ServiceAccount"
-	//               dependency.name = desiredObj.spec.serviceAccountName
-	//               dependency.namespace = desiredObj.namespace
-	//               dependencies[1] = {}
+	//               dependency.name = serviceAccountName
+	//               dependency.namespace = desiredObj.metadata.namespace
 	//               dependencies[1] = dependency
 	//           end
 	//           return dependencies
