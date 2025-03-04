@@ -60,9 +60,17 @@ type WorkSpec struct {
 
 	// SuspendDispatching controls whether dispatching should
 	// be suspended, nil means not suspend.
-	// Note: true means stop propagating to all clusters.
+	// Note: true means stop propagating to the corresponding member cluster, and
+	// does not prevent status collection.
 	// +optional
 	SuspendDispatching *bool `json:"suspendDispatching,omitempty"`
+
+	// PreserveResourcesOnDeletion controls whether resources should be preserved on the
+	// member cluster when the Work object is deleted.
+	// If set to true, resources will be preserved on the member cluster.
+	// Default is false, which means resources will be deleted along with the Work object.
+	// +optional
+	PreserveResourcesOnDeletion *bool `json:"preserveResourcesOnDeletion,omitempty"`
 }
 
 // WorkloadTemplate represents the manifest workload to be deployed on managed cluster.
