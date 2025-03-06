@@ -113,6 +113,26 @@ type KarmadaSpec struct {
 	// By default, the operator will only attempt to download the tarball if it's not yet present in the local cache.
 	// +optional
 	CRDTarball *CRDTarball `json:"crdTarball,omitempty"`
+
+	// CustomCertificate specifies the configuration to customize the certificates
+	// for Karmada components or control the certificate generation process, such as
+	// the algorithm, validity period, etc.
+	// Currently, it only supports customizing the CA certificate for limited components.
+	// +optional
+	CustomCertificate *CustomCertificate `json:"customCertificate,omitempty"`
+}
+
+// CustomCertificate holds the configuration for generating the certificate.
+type CustomCertificate struct {
+	// APIServerCACert references a Kubernetes secret containing the CA certificate
+	// for component karmada-apiserver.
+	// The secret must contain the following data keys:
+	// - tls.crt: The TLS certificate.
+	// - tls.key: The TLS private key.
+	// If specified, this CA will be used to issue client certificates for
+	// all components that access the APIServer as clients.
+	// +optional
+	APIServerCACert *LocalSecretReference `json:"apiServerCACert,omitempty"`
 }
 
 // ImageRegistry represents an image registry as well as the
@@ -239,19 +259,32 @@ type VolumeData struct {
 // operator has no knowledge of where certificate files live, and they must be supplied.
 type ExternalEtcd struct {
 	// Endpoints of etcd members. Required for ExternalEtcd.
+	// +required
 	Endpoints []string `json:"endpoints"`
 
 	// CAData is an SSL Certificate Authority file used to secure etcd communication.
 	// Required if using a TLS connection.
-	CAData []byte `json:"caData"`
+	// Deprecated: This field is deprecated and will be removed in a future version. Use SecretRef for providing client connection credentials.
+	CAData []byte `json:"caData,omitempty"`
 
 	// CertData is an SSL certification file used to secure etcd communication.
 	// Required if using a TLS connection.
-	CertData []byte `json:"certData"`
+	// Deprecated: This field is deprecated and will be removed in a future version. Use SecretRef for providing client connection credentials.
+	CertData []byte `json:"certData,omitempty"`
 
 	// KeyData is an SSL key file used to secure etcd communication.
 	// Required if using a TLS connection.
-	KeyData []byte `json:"keyData"`
+	// Deprecated: This field is deprecated and will be removed in a future version. Use SecretRef for providing client connection credentials.
+	KeyData []byte `json:"keyData,omitempty"`
+
+	// SecretRef references a Kubernetes secret containing the etcd connection credentials.
+	// The secret must contain the following data keys:
+	// ca.crt: The Certificate Authority (CA) certificate data.
+	// tls.crt: The TLS certificate data used for verifying the etcd server's certificate.
+	// tls.key: The TLS private key.
+	// Required to configure the connection to an external etcd cluster.
+	// +required
+	SecretRef LocalSecretReference `json:"secretRef"`
 }
 
 // KarmadaAPIServer holds settings to kube-apiserver component of the kubernetes.
@@ -264,8 +297,12 @@ type KarmadaAPIServer struct {
 	// +optional
 	ServiceSubnet *string `json:"serviceSubnet,omitempty"`
 
-	// ServiceType represents the service type of karmada apiserver.
-	// it is ClusterIP by default.
+	// ServiceType represents the service type of Karmada API server.
+	// Valid options are: "ClusterIP", "NodePort", "LoadBalancer".
+	// Defaults to "ClusterIP".
+	//
+	// +kubebuilder:default="ClusterIP"
+	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
 	// +optional
 	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
 
@@ -289,6 +326,24 @@ type KarmadaAPIServer struct {
 	// for details.
 	// +optional
 	ExtraArgs map[string]string `json:"extraArgs,omitempty"`
+
+	// ExtraVolumes specifies a list of extra volumes for the API server's pod
+	// To fulfil the base functionality required for a functioning control plane, when provisioning a new Karmada instance,
+	// the operator will automatically attach volumes for the API server pod needed to configure things such as TLS,
+	// SA token issuance/signing and secured connection to etcd, amongst others. However, given the wealth of options for configurability,
+	// there are additional features (e.g., encryption at rest and custom AuthN webhook) that can be configured. ExtraVolumes, in conjunction
+	// with ExtraArgs and ExtraVolumeMounts can be used to fulfil those use cases.
+	// +optional
+	ExtraVolumes []corev1.Volume `json:"extraVolumes,omitempty"`
+
+	// ExtraVolumeMounts specifies a list of extra volume mounts to be mounted into the API server's container
+	// To fulfil the base functionality required for a functioning control plane, when provisioning a new Karmada instance,
+	// the operator will automatically mount volumes into the API server container needed to configure things such as TLS,
+	// SA token issuance/signing and secured connection to etcd, amongst others. However, given the wealth of options for configurability,
+	// there are additional features (e.g., encryption at rest and custom AuthN webhook) that can be configured. ExtraVolumeMounts, in conjunction
+	// with ExtraArgs and ExtraVolumes can be used to fulfil those use cases.
+	// +optional
+	ExtraVolumeMounts []corev1.VolumeMount `json:"extraVolumeMounts,omitempty"`
 
 	// CertSANs sets extra Subject Alternative Names for the API Server signing cert.
 	// +optional
@@ -659,6 +714,21 @@ type KarmadaStatus struct {
 	// Conditions represents the latest available observations of a karmada's current state.
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// APIServerService reports the location of the Karmada API server service which
+	// can be used by third-party applications to discover the Karmada Service, e.g.
+	// expose the service outside the cluster by Ingress.
+	// +optional
+	APIServerService *APIServerService `json:"apiServerService,omitempty"`
+}
+
+// APIServerService tells the location of Karmada API server service.
+// Currently, it only includes the name of the service. The namespace
+// of the service is the same as the namespace of the current Karmada object.
+type APIServerService struct {
+	// Name represents the name of the Karmada API Server service.
+	// +required
+	Name string `json:"name"`
 }
 
 // LocalSecretReference is a reference to a secret within the enclosing

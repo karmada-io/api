@@ -149,9 +149,21 @@ func (in *GracefulEvictionTask) DeepCopyInto(out *GracefulEvictionTask) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.PreservedLabelState != nil {
+		in, out := &in.PreservedLabelState, &out.PreservedLabelState
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.CreationTimestamp != nil {
 		in, out := &in.CreationTimestamp, &out.CreationTimestamp
 		*out = (*in).DeepCopy()
+	}
+	if in.ClustersBeforeFailover != nil {
+		in, out := &in.ClustersBeforeFailover, &out.ClustersBeforeFailover
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 	return
 }
@@ -353,6 +365,11 @@ func (in *ResourceBindingSpec) DeepCopyInto(out *ResourceBindingSpec) {
 		*out = new(v1alpha1.Suspension)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.PreserveResourcesOnDeletion != nil {
+		in, out := &in.PreserveResourcesOnDeletion, &out.PreserveResourcesOnDeletion
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 
@@ -428,6 +445,18 @@ func (in *TaskOptions) DeepCopyInto(out *TaskOptions) {
 		in, out := &in.suppressDeletion, &out.suppressDeletion
 		*out = new(bool)
 		**out = **in
+	}
+	if in.preservedLabelState != nil {
+		in, out := &in.preservedLabelState, &out.preservedLabelState
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
+	if in.clustersBeforeFailover != nil {
+		in, out := &in.clustersBeforeFailover, &out.clustersBeforeFailover
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 	return
 }

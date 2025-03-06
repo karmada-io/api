@@ -181,6 +181,25 @@ type PropagationSpec struct {
 	// nil means no suspension. no default values.
 	// +optional
 	Suspension *Suspension `json:"suspension,omitempty"`
+
+	// PreserveResourcesOnDeletion controls whether resources should be preserved on the
+	// member clusters when the resource template is deleted.
+	// If set to true, resources will be preserved on the member clusters.
+	// Default is false, which means resources will be deleted along with the resource template.
+	//
+	// This setting is particularly useful during workload migration scenarios to ensure
+	// that rollback can occur quickly without affecting the workloads running on the
+	// member clusters.
+	//
+	// Additionally, this setting applies uniformly across all member clusters and will not
+	// selectively control preservation on only some clusters.
+	//
+	// Note: This setting does not apply to the deletion of the policy itself.
+	// When the policy is deleted, the resource templates and their corresponding
+	// propagated resources in member clusters will remain unchanged unless explicitly deleted.
+	//
+	// +optional
+	PreserveResourcesOnDeletion *bool `json:"preserveResourcesOnDeletion,omitempty"`
 }
 
 // ResourceSelector the resources will be selected.
@@ -240,13 +259,19 @@ type SuspendClusters struct {
 	ClusterNames []string `json:"clusterNames,omitempty"`
 }
 
-// PurgeMode represents that how to deal with the legacy applications on the
+// PurgeMode represents how to deal with the legacy application on the
 // cluster from which the application is migrated.
 type PurgeMode string
 
 const (
 	// Immediately represents that Karmada will immediately evict the legacy
-	// application.
+	// application. This is useful in scenarios where an application can not
+	// tolerate two instances running simultaneously.
+	// For example, the Flink application supports exactly-once state consistency,
+	// which means it requires that no two instances of the application are running
+	// at the same time. During a failover, it is crucial to ensure that the old
+	// application is removed before creating a new one to avoid duplicate
+	// processing and maintaining state consistency.
 	Immediately PurgeMode = "Immediately"
 	// Graciously represents that Karmada will wait for the application to
 	// come back to healthy on the new cluster or after a timeout is reached
@@ -299,6 +324,23 @@ type ApplicationFailoverBehavior struct {
 	// Value must be positive integer.
 	// +optional
 	GracePeriodSeconds *int32 `json:"gracePeriodSeconds,omitempty"`
+
+	// StatePreservation defines the policy for preserving and restoring state data
+	// during failover events for stateful applications.
+	//
+	// When an application fails over from one cluster to another, this policy enables
+	// the extraction of critical data from the original resource configuration.
+	// Upon successful migration, the extracted data is then re-injected into the new
+	// resource, ensuring that the application can resume operation with its previous
+	// state intact.
+	// This is particularly useful for stateful applications where maintaining data
+	// consistency across failover events is crucial.
+	// If not specified, means no state data will be preserved.
+	//
+	// Note: This requires the StatefulFailoverInjection feature gate to be enabled,
+	// which is alpha.
+	// +optional
+	StatePreservation *StatePreservation `json:"statePreservation,omitempty"`
 }
 
 // DecisionConditions represents the decision conditions of performing the failover process.
@@ -310,6 +352,41 @@ type DecisionConditions struct {
 	// +kubebuilder:default=300
 	// +optional
 	TolerationSeconds *int32 `json:"tolerationSeconds,omitempty"`
+}
+
+// StatePreservation defines the policy for preserving state during failover events.
+type StatePreservation struct {
+	// Rules contains a list of StatePreservationRule configurations.
+	// Each rule specifies a JSONPath expression targeting specific pieces of
+	// state data to be preserved during failover events. An AliasLabelName is associated
+	// with each rule, serving as a label key when the preserved data is passed
+	// to the new cluster.
+	// +required
+	Rules []StatePreservationRule `json:"rules"`
+}
+
+// StatePreservationRule defines a single rule for state preservation.
+// It includes a JSONPath expression and an alias name that will be used
+// as a label key when passing state information to the new cluster.
+type StatePreservationRule struct {
+	// AliasLabelName is the name that will be used as a label key when the preserved
+	// data is passed to the new cluster. This facilitates the injection of the
+	// preserved state back into the application resources during recovery.
+	// +required
+	AliasLabelName string `json:"aliasLabelName"`
+
+	// JSONPath is the JSONPath template used to identify the state data
+	// to be preserved from the original resource configuration.
+	// The JSONPath syntax follows the Kubernetes specification:
+	// https://kubernetes.io/docs/reference/kubectl/jsonpath/
+	//
+	// Note: The JSONPath expression will start searching from the "status" field of
+	// the API resource object by default. For example, to extract the "availableReplicas"
+	// from a Deployment, the JSONPath expression should be "{.availableReplicas}", not
+	// "{.status.availableReplicas}".
+	//
+	// +required
+	JSONPath string `json:"jsonPath"`
 }
 
 // Placement represents the rule for select clusters.

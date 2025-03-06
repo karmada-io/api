@@ -172,6 +172,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 			},
 			EvictEvent: GracefulEvictionTask{
 				FromCluster: "m1",
+				PurgeMode:   policyv1alpha1.Immediately,
 				Reason:      EvictionReasonTaintUntolerated,
 				Message:     "graceful eviction",
 				Producer:    EvictionProducerTaintManager,
@@ -181,6 +182,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 				GracefulEvictionTasks: []GracefulEvictionTask{
 					{
 						FromCluster: "m1",
+						PurgeMode:   policyv1alpha1.Immediately,
 						Replicas:    ptr.To[int32](1),
 						Reason:      EvictionReasonTaintUntolerated,
 						Message:     "graceful eviction",
@@ -196,6 +198,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 			},
 			EvictEvent: GracefulEvictionTask{
 				FromCluster: "m2",
+				PurgeMode:   policyv1alpha1.Never,
 				Reason:      EvictionReasonTaintUntolerated,
 				Message:     "graceful eviction",
 				Producer:    EvictionProducerTaintManager,
@@ -205,6 +208,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 				GracefulEvictionTasks: []GracefulEvictionTask{
 					{
 						FromCluster: "m2",
+						PurgeMode:   policyv1alpha1.Never,
 						Replicas:    ptr.To[int32](2),
 						Reason:      EvictionReasonTaintUntolerated,
 						Message:     "graceful eviction",
@@ -220,6 +224,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 			},
 			EvictEvent: GracefulEvictionTask{
 				FromCluster: "m3",
+				PurgeMode:   policyv1alpha1.Graciously,
 				Reason:      EvictionReasonTaintUntolerated,
 				Message:     "graceful eviction",
 				Producer:    EvictionProducerTaintManager,
@@ -229,6 +234,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 				GracefulEvictionTasks: []GracefulEvictionTask{
 					{
 						FromCluster: "m3",
+						PurgeMode:   policyv1alpha1.Graciously,
 						Replicas:    ptr.To[int32](3),
 						Reason:      EvictionReasonTaintUntolerated,
 						Message:     "graceful eviction",
@@ -245,6 +251,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 			},
 			EvictEvent: GracefulEvictionTask{
 				FromCluster: "m3",
+				PurgeMode:   policyv1alpha1.Graciously,
 				Reason:      EvictionReasonTaintUntolerated,
 				Message:     "graceful eviction",
 				Producer:    EvictionProducerTaintManager,
@@ -257,6 +264,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 					},
 					{
 						FromCluster: "m3",
+						PurgeMode:   policyv1alpha1.Graciously,
 						Replicas:    ptr.To[int32](3),
 						Reason:      EvictionReasonTaintUntolerated,
 						Message:     "graceful eviction",
@@ -286,6 +294,7 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 			},
 			EvictEvent: GracefulEvictionTask{
 				FromCluster: "m1",
+				PurgeMode:   policyv1alpha1.Graciously,
 				Replicas:    ptr.To[int32](1),
 				Reason:      EvictionReasonTaintUntolerated,
 				Message:     "graceful eviction v2",
@@ -309,7 +318,11 @@ func TestResourceBindingSpec_GracefulEvictCluster(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.InputSpec.GracefulEvictCluster(tc.EvictEvent.FromCluster, NewTaskOptions(WithProducer(tc.EvictEvent.Producer), WithReason(tc.EvictEvent.Reason), WithMessage(tc.EvictEvent.Message)))
+			tc.InputSpec.GracefulEvictCluster(tc.EvictEvent.FromCluster, NewTaskOptions(
+				WithPurgeMode(tc.EvictEvent.PurgeMode),
+				WithProducer(tc.EvictEvent.Producer),
+				WithReason(tc.EvictEvent.Reason),
+				WithMessage(tc.EvictEvent.Message)))
 
 			if !reflect.DeepEqual(tc.InputSpec.Clusters, tc.ExpectSpec.Clusters) {
 				t.Fatalf("expect clusters: %v, but got: %v", tc.ExpectSpec.Clusters, tc.InputSpec.Clusters)
