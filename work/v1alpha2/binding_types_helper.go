@@ -16,6 +16,8 @@ limitations under the License.
 
 package v1alpha2
 
+import policyv1alpha1 "github.com/karmada-io/api/policy/v1alpha1"
+
 // TaskOptions represents options for GracefulEvictionTasks.
 type TaskOptions struct {
 	purgeMode              policyv1alpha1.PurgeMode
@@ -191,4 +193,23 @@ func (s *ResourceBindingSpec) GracefulEvictCluster(name string, options *TaskOpt
 		evictionTask.Replicas = &evictingCluster.Replicas
 	}
 	s.GracefulEvictionTasks = append(s.GracefulEvictionTasks, evictionTask)
+}
+
+// SchedulingSuspended tells if the scheduling of ResourceBinding or
+// ClusterResourceBinding is suspended.
+func (s *ResourceBindingSpec) SchedulingSuspended() bool {
+	if s == nil || s.Suspension == nil || s.Suspension.Scheduling == nil {
+		return false
+	}
+
+	return *s.Suspension.Scheduling
+}
+
+// SchedulePriorityValue returns the scheduling priority declared
+// by '.spec.SchedulePriority.Priority'.
+func (s *ResourceBindingSpec) SchedulePriorityValue() int32 {
+	if s.SchedulePriority == nil {
+		return 0
+	}
+	return s.SchedulePriority.Priority
 }

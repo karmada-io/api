@@ -150,7 +150,7 @@ type ResourceBindingSpec struct {
 	// Suspension declares the policy for suspending different aspects of propagation.
 	// nil means no suspension. no default values.
 	// +optional
-	Suspension *policyv1alpha1.Suspension `json:"suspension,omitempty"`
+	Suspension *Suspension `json:"suspension,omitempty"`
 
 	// PreserveResourcesOnDeletion controls whether resources should be preserved on the
 	// member clusters when the binding object is deleted.
@@ -159,6 +159,10 @@ type ResourceBindingSpec struct {
 	// This setting applies to all Work objects created under this binding object.
 	// +optional
 	PreserveResourcesOnDeletion *bool `json:"preserveResourcesOnDeletion,omitempty"`
+
+	// SchedulePriority represents the scheduling priority assigned to workloads.
+	// +optional
+	SchedulePriority *SchedulePriority `json:"schedulePriority,omitempty"`
 }
 
 // ObjectReference contains enough information to locate the referenced object inside current cluster.
@@ -320,6 +324,31 @@ type BindingSnapshot struct {
 	// Clusters represents the scheduled result.
 	// +optional
 	Clusters []TargetCluster `json:"clusters,omitempty"`
+}
+
+// Suspension defines the policy for suspending dispatching and scheduling.
+type Suspension struct {
+	policyv1alpha1.Suspension `json:",inline"`
+
+	// Scheduling controls whether scheduling should be suspended, the scheduler will pause scheduling and not
+	// process resource binding when the value is true and resume scheduling when it's false or nil.
+	// This is designed for third-party systems to temporarily pause the scheduling of applications, which enabling
+	// manage resource allocation, prioritize critical workloads, etc.
+	// It is expected that third-party systems use an admission webhook to suspend scheduling at the time of
+	// ResourceBinding creation. Once a ResourceBinding has been scheduled, it cannot be paused afterward, as it may
+	// lead to ineffective suspension.
+	// +optional
+	Scheduling *bool `json:"scheduling,omitempty"`
+}
+
+// SchedulePriority represents the scheduling priority assigned to workloads.
+type SchedulePriority struct {
+	// Priority specifies the scheduling priority for the binding.
+	// Higher values indicate a higher priority.
+	// If not explicitly set, the default value is 0.
+	// +kubebuilder:default=0
+	// +optional
+	Priority int32 `json:"priority,omitempty"`
 }
 
 // ResourceBindingStatus represents the overall status of the strategy as well as the referenced resources.
