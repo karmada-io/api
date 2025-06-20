@@ -114,6 +114,11 @@ func (in *CustomCertificate) DeepCopyInto(out *CustomCertificate) {
 		*out = new(LocalSecretReference)
 		**out = **in
 	}
+	if in.LeafCertValidityDays != nil {
+		in, out := &in.LeafCertValidityDays, &out.LeafCertValidityDays
+		*out = new(int32)
+		**out = **in
+	}
 	return
 }
 
@@ -298,6 +303,11 @@ func (in *KarmadaAPIServer) DeepCopyInto(out *KarmadaAPIServer) {
 	in.CommonSettings.DeepCopyInto(&out.CommonSettings)
 	if in.ServiceSubnet != nil {
 		in, out := &in.ServiceSubnet, &out.ServiceSubnet
+		*out = new(string)
+		**out = **in
+	}
+	if in.LoadBalancerClass != nil {
+		in, out := &in.LoadBalancerClass, &out.LoadBalancerClass
 		*out = new(string)
 		**out = **in
 	}
@@ -669,6 +679,11 @@ func (in *KarmadaSpec) DeepCopyInto(out *KarmadaSpec) {
 		in, out := &in.CustomCertificate, &out.CustomCertificate
 		*out = new(CustomCertificate)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.Suspend != nil {
+		in, out := &in.Suspend, &out.Suspend
+		*out = new(bool)
+		**out = **in
 	}
 	return
 }
