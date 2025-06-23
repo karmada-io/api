@@ -120,6 +120,12 @@ type KarmadaSpec struct {
 	// Currently, it only supports customizing the CA certificate for limited components.
 	// +optional
 	CustomCertificate *CustomCertificate `json:"customCertificate,omitempty"`
+
+	// Suspend indicates that the operator should suspend reconciliation
+	// for this Karmada control plane and all its managed resources.
+	// Karmada instances for which this field is not explicitly set to `true` will continue to be reconciled as usual.
+	// +optional
+	Suspend *bool `json:"suspend,omitempty"`
 }
 
 // CustomCertificate holds the configuration for generating the certificate.
@@ -133,6 +139,12 @@ type CustomCertificate struct {
 	// all components that access the APIServer as clients.
 	// +optional
 	APIServerCACert *LocalSecretReference `json:"apiServerCACert,omitempty"`
+
+	// LeafCertValidityDays specifies the validity period of leaf certificates (e.g., API Server certificate) in days.
+	// If not specified, the default validity period of 1 year will be used.
+	// +kubebuilder:validation:Minimum=1
+	// +optional
+	LeafCertValidityDays *int32 `json:"leafCertValidityDays,omitempty"`
 }
 
 // ImageRegistry represents an image registry as well as the
@@ -305,6 +317,17 @@ type KarmadaAPIServer struct {
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
 	// +optional
 	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
+
+	// LoadBalancerClass specifies the load balancer implementation class for the Karmada API server.
+	// This field is applicable only when ServiceType is set to LoadBalancer.
+	// If specified, the service will be processed by the load balancer implementation that matches the specified class.
+	// By default, this is not set and the LoadBalancer type of Service uses the cloud provider's default load balancer
+	// implementation.
+	// Once set, it cannot be changed. The value must be a label-style identifier, with an optional prefix such as
+	// "internal-vip" or "example.com/internal-vip".
+	// More info: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+	// +optional
+	LoadBalancerClass *string `json:"loadBalancerClass,omitempty"`
 
 	// ServiceAnnotations is an extra set of annotations for service of karmada apiserver.
 	// more info: https://github.com/karmada-io/karmada/issues/4634
