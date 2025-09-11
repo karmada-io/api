@@ -86,6 +86,17 @@ type ResourceBindingSpec struct {
 	// +optional
 	Replicas int32 `json:"replicas,omitempty"`
 
+	// Components represents the requirements of multiple pod templates of the referencing resource.
+	// It is designed to support workloads that consist of multiple pod templates,
+	// such as distributed training jobs (e.g., PyTorch, TensorFlow) and big data workloads (e.g., FlinkDeployment),
+	// where each workload is composed of more than one pod template. It is also capable of representing
+	// single-component workloads, such as Deployment.
+	//
+	// Note: This field is intended to replace the legacy ReplicaRequirements and Replicas fields above.
+	// It is only populated when the MultiplePodTemplatesScheduling feature gate is enabled.
+	// +optional
+	Components []Component `json:"components,omitempty"`
+
 	// Clusters represents target member clusters where the resource to be deployed.
 	// +optional
 	Clusters []TargetCluster `json:"clusters,omitempty"`
@@ -212,6 +223,39 @@ type ReplicaRequirements struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 }
 
+// Component represents the requirements for a specific component.
+type Component struct {
+	// Name of this component.
+	// It is required when the resource contains multiple components to ensure proper identification,
+	// and must also be unique within the same resource.
+	// +kubebuilder:validation:MaxLength=32
+	// +required
+	Name string `json:"name"`
+
+	// Replicas represents the replica number of the resource's component.
+	// +required
+	Replicas int32 `json:"replicas"`
+
+	// ReplicaRequirements represents the requirements required by each replica for this component.
+	// +optional
+	ReplicaRequirements *ComponentReplicaRequirements `json:"replicaRequirements,omitempty"`
+}
+
+// ComponentReplicaRequirements represents the requirements required by each replica.
+type ComponentReplicaRequirements struct {
+	// NodeClaim represents the node claim HardNodeAffinity, NodeSelector and Tolerations required by each replica.
+	// +optional
+	NodeClaim *NodeClaim `json:"nodeClaim,omitempty"`
+
+	// ResourceRequest represents the resources required by each replica.
+	// +optional
+	ResourceRequest corev1.ResourceList `json:"resourceRequest,omitempty"`
+
+	// PriorityClassName represents the resources priorityClassName
+	// +optional
+	PriorityClassName string `json:"priorityClassName,omitempty"`
+}
+
 // NodeClaim represents the node claim HardNodeAffinity, NodeSelector and Tolerations required by each replica.
 type NodeClaim struct {
 	// A node selector represents the union of the results of one or more label queries over a set of
@@ -246,8 +290,8 @@ type GracefulEvictionTask struct {
 
 	// PurgeMode represents how to deal with the legacy applications on the
 	// cluster from which the application is migrated.
-	// Valid options are "Immediately", "Graciously" and "Never".
-	// +kubebuilder:validation:Enum=Immediately;Graciously;Never
+	// Valid options are "Immediately", "Directly", "Graciously", "Gracefully" and "Never".
+	// +kubebuilder:validation:Enum=Immediately;Directly;Graciously;Gracefully;Never
 	// +optional
 	PurgeMode policyv1alpha1.PurgeMode `json:"purgeMode,omitempty"`
 
@@ -432,6 +476,11 @@ const (
 	// BindingReasonUnschedulable reason in Scheduled condition means that the scheduler can't schedule
 	// the binding right now, for example due to insufficient resources in the clusters.
 	BindingReasonUnschedulable = "Unschedulable"
+
+	// BindingReasonQuotaExceeded reason in Scheduled condition means that the scheduler can't schedule
+	// the binding because the resource requirement exceeds one or more of the FederatedResourceQuotas
+	// defined in the namespace.
+	BindingReasonQuotaExceeded = "QuotaExceeded"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
