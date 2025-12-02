@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // +genclient
@@ -59,7 +60,7 @@ const (
 type HTTPSource struct {
 	// URL specifies the URL of the CRD tarball resource.
 	// +required
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 
 	// Proxy specifies the configuration of a proxy server to use when downloading the CRD tarball.
 	// When set, the operator will use the configuration to determine how to establish a connection to the proxy to fetch the tarball from the URL specified above.
@@ -179,7 +180,7 @@ type ImageRegistry struct {
 type KarmadaComponents struct {
 	// Etcd holds configuration for etcd.
 	// +required
-	Etcd *Etcd `json:"etcd,omitempty"`
+	Etcd *Etcd `json:"etcd"`
 
 	// KarmadaAPIServer holds settings to kube-apiserver component. Currently, kube-apiserver
 	// is used as the apiserver of karmada. we had the same experience as k8s apiserver.
@@ -290,21 +291,6 @@ type ExternalEtcd struct {
 	// Endpoints of etcd members. Required for ExternalEtcd.
 	// +required
 	Endpoints []string `json:"endpoints"`
-
-	// CAData is an SSL Certificate Authority file used to secure etcd communication.
-	// Required if using a TLS connection.
-	// Deprecated: This field is deprecated and will be removed in a future version. Use SecretRef for providing client connection credentials.
-	CAData []byte `json:"caData,omitempty"`
-
-	// CertData is an SSL certification file used to secure etcd communication.
-	// Required if using a TLS connection.
-	// Deprecated: This field is deprecated and will be removed in a future version. Use SecretRef for providing client connection credentials.
-	CertData []byte `json:"certData,omitempty"`
-
-	// KeyData is an SSL key file used to secure etcd communication.
-	// Required if using a TLS connection.
-	// Deprecated: This field is deprecated and will be removed in a future version. Use SecretRef for providing client connection credentials.
-	KeyData []byte `json:"keyData,omitempty"`
 
 	// SecretRef references a Kubernetes secret containing the etcd connection credentials.
 	// The secret must contain the following data keys:
@@ -700,6 +686,11 @@ type CommonSettings struct {
 	// +kubebuilder:default="system-node-critical"
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+
+	// PodDisruptionBudgetConfig specifies the PodDisruptionBudget configuration
+	// for this component's pods. If not set, no PDB will be created.
+	// +optional
+	PodDisruptionBudgetConfig *PodDisruptionBudgetConfig `json:"podDisruptionBudgetConfig,omitempty"`
 }
 
 // Image allows to customize the image used for components.
@@ -791,6 +782,24 @@ type LocalSecretReference struct {
 
 	// Name is the name of resource being referenced.
 	Name string `json:"name,omitempty"`
+}
+
+// PodDisruptionBudgetConfig defines a subset of PodDisruptionBudgetSpec fields
+// that users can configure for their control plane components.
+// +kubebuilder:validation:XValidation:rule="has(self.minAvailable) || has(self.maxUnavailable)",message="either minAvailable or maxUnavailable must be set"
+// +kubebuilder:validation:XValidation:rule="!(has(self.minAvailable) && has(self.maxUnavailable))",message="minAvailable and maxUnavailable are mutually exclusive"
+type PodDisruptionBudgetConfig struct {
+	// MinAvailable specifies the minimum number or percentage of pods
+	// that must remain available after evictions.
+	// Mutually exclusive with MaxUnavailable.
+	// +optional
+	MinAvailable *intstr.IntOrString `json:"minAvailable,omitempty"`
+
+	// MaxUnavailable specifies the maximum number or percentage of pods
+	// that can be unavailable after evictions.
+	// Mutually exclusive with MinAvailable.
+	// +optional
+	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
 }
 
 // +kubebuilder:object:root=true
